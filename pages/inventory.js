@@ -38,46 +38,46 @@ export default function Inventory() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <Navbar />
       <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 p-8">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Inventory Management</h1>
+            <h1 className="text-3xl font-bold text-foreground">Inventory Management</h1>
             <button
               onClick={() => openModal()}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+              className="bg-accent hover:bg-accent/80 text-foreground font-bold py-2 px-4 rounded transition duration-300"
             >
               Add New Item
             </button>
           </div>
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+          <div className="bg-secondary rounded-lg overflow-hidden shadow-lg">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-primary">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Item Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Quantity</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-700">
                 {inventoryItems.map((item) => (
-                  <tr key={item.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">{item.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{item.quantity}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{item.category}</td>
+                  <tr key={item.id} className="bg-secondary">
+                    <td className="px-6 py-4 whitespace-nowrap text-foreground">{item.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-foreground">{item.quantity}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-foreground">{item.category}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => openModal(item)}
-                        className="text-blue-600 hover:text-blue-900 mr-2"
+                        className="text-accent hover:text-accent/80 mr-4 transition duration-300"
                       >
                         Edit
                       </button>
                       <button
                         onClick={() => deleteItem(item.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-500 hover:text-red-400 transition duration-300"
                       >
                         Delete
                       </button>
@@ -159,13 +159,13 @@ function AddEditItemModal({ closeModal, addOrUpdateItem, editingItem }) {
             </div>
             <div className="flex items-center justify-between">
               <button
-                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
                 type="submit"
               >
                 {editingItem ? 'Update Item' : 'Add Item'}
               </button>
               <button
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-300"
                 type="button"
                 onClick={closeModal}
               >

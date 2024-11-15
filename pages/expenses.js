@@ -18,14 +18,14 @@ export default function Expenses() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-100">
       <Navbar />
       <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 p-8">
           <h1 className="text-3xl font-bold mb-6">Expenses</h1>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Add Expense</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
@@ -66,15 +66,15 @@ export default function Expenses() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300"
                 >
                   Add Expense
                 </button>
               </form>
             </div>
-            <div>
+            <div className="bg-white p-6 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold mb-4">Expense List</h2>
-              <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
