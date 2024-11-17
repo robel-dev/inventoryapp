@@ -1,6 +1,9 @@
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import Footer from '../components/Footer'
+import SalesSummary from '../components/SalesSummary'
+
+// In your component:
 
 export default function Home() {
   return (
@@ -15,6 +18,7 @@ export default function Home() {
             <DashboardWidget title="Inventory Value" value="$54,321" icon="📦" />
             <DashboardWidget title="Recent Expenses" value="$2,468" icon="💸" />
             <DashboardWidget title="Low Stock" value="3 items" icon="⚠️" />
+           
           </div>
         </main>
       </div>

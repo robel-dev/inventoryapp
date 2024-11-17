@@ -3,6 +3,8 @@ import { supabase } from '../lib/supabaseClient'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import Footer from '../components/Footer'
+import AddSaleModal from '../components/modals/AddSaleModal'
+import SalesSummary from '../components/SalesSummary'
 
 export default function Sales() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -10,18 +12,37 @@ export default function Sales() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [inventoryItems, setInventoryItems] = useState([])
-  const [newSale, setNewSale] = useState({
-    service_type: '',
-    items_sold: [],
-    payment_type: '',
-    total_amount: 0,
-    selectedItem: '',
-    selectedQuantity: 1
-  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     fetchSales()
     fetchInventoryItems()
+
+    // Set up real-time subscription for sales updates
+    const salesChannel = supabase
+      .channel('sales-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sales'
+        },
+        (payload) => {
+          // Handle different types of changes
+          if (payload.eventType === 'INSERT') {
+            // Fetch fresh data to ensure consistency
+            fetchSales()
+            fetchInventoryItems()
+          }
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(salesChannel)
+    }
   }, [])
 
   async function fetchSales() {
@@ -55,126 +76,20 @@ export default function Sales() {
     }
   }
 
-//   const handleAddItem = () => {
-//     const selectedInventoryItem = inventoryItems.find(
-//       item => item.id === newSale.selectedItem
-//     )
-
-//     if (!selectedInventoryItem) return
-
-//     const newItem = {
-//       id: selectedInventoryItem.id,
-//       name: selectedInventoryItem.name,
-//       quantity: parseInt(newSale.selectedQuantity),
-//       unit_price: selectedInventoryItem.unit_price,
-//       subtotal: selectedInventoryItem.unit_price * parseInt(newSale.selectedQuantity)
-//     }
-
-//     setNewSale(prev => ({
-//       ...prev,
-//       items_sold: [...prev.items_sold, newItem],
-//       total_amount: prev.total_amount + newItem.subtotal,
-//       selectedItem: '',
-//       selectedQuantity: 1
-//     }))
-//   }
-
-const handleAddItem = async () => {
+  async function handleCompleteSale(saleData) {
     try {
-      const selectedInventoryItem = inventoryItems.find(
-        item => item.id === newSale.selectedItem
-      )
-  
-      if (!selectedInventoryItem) return
-  
-      // Check if quantity is available
-      if (selectedInventoryItem.quantity < parseInt(newSale.selectedQuantity)) {
-        setError(`Only ${selectedInventoryItem.quantity} units available for ${selectedInventoryItem.name}`)
-        return
-      }
-  
-      const newItem = {
-        id: selectedInventoryItem.id,
-        name: selectedInventoryItem.name,
-        quantity: parseInt(newSale.selectedQuantity),
-        unit_price: selectedInventoryItem.unit_price,
-        subtotal: selectedInventoryItem.unit_price * parseInt(newSale.selectedQuantity)
-      }
-  
-      setNewSale(prev => ({
-        ...prev,
-        items_sold: [...prev.items_sold, newItem],
-        total_amount: prev.total_amount + newItem.subtotal,
-        selectedItem: '',
-        selectedQuantity: 1
-      }))
-    } catch (err) {
-      setError('Error adding item: ' + err.message)
-    }
-  }
-
-  const handleRemoveItem = (index) => {
-    setNewSale(prev => ({
-      ...prev,
-      items_sold: prev.items_sold.filter((_, i) => i !== index),
-      total_amount: prev.items_sold
-        .filter((_, i) => i !== index)
-        .reduce((sum, item) => sum + item.subtotal, 0)
-    }))
-  }
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault()
-//     try {
-//       // First, update inventory quantities
-//       for (const item of newSale.items_sold) {
-//         const { error: inventoryError } = await supabase
-//           .from('inventory_items')
-//           .update({ 
-//             quantity: supabase.raw(`quantity - ${item.quantity}`)
-//           })
-//           .eq('id', item.id)
-
-//         if (inventoryError) throw inventoryError
-//       }
-
-//       // Then create the sale record
-//       const { data, error } = await supabase
-//         .from('sales')
-//         .insert([{
-//           service_type: newSale.service_type,
-//           items_sold: newSale.items_sold,
-//           payment_type: newSale.payment_type,
-//           total_amount: newSale.total_amount
-//         }])
-//         .select()
-
-//       if (error) throw error
-
-//       // Reset form and refresh data
-//       setNewSale({
-//         service_type: '',
-//         items_sold: [],
-//         payment_type: '',
-//         total_amount: 0,
-//         selectedItem: '',
-//         selectedQuantity: 1
-//       })
+      // Set submitting state to true at the start
+      setIsSubmitting(true)
       
-//       await fetchSales() // Refresh sales list
-//       await fetchInventoryItems() // Refresh inventory
-//     } catch (err) {
-//       setError('Error creating sale: ' + err.message)
-//     }
-//   }
+      // Get current dates
+      const today = new Date().toISOString().split('T')[0]
+      const weekStart = getWeekStart()
+      const monthDate = new Date().toISOString().slice(0, 7) + '-01'
 
-const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      // First, fetch current inventory quantities and update them
-      for (const item of newSale.items_sold) {
+      // Update inventory first and check stock
+      for (const item of saleData.items_sold) {
         // First get current quantity
-        const { data: inventoryData, error: fetchError } = await supabase
+        const { data: inventoryItem, error: fetchError } = await supabase
           .from('inventory_items')
           .select('quantity')
           .eq('id', item.id)
@@ -182,8 +97,13 @@ const handleSubmit = async (e) => {
 
         if (fetchError) throw fetchError
 
-        // Then update with new quantity
-        const newQuantity = inventoryData.quantity - item.quantity
+        // Check if enough stock
+        if (inventoryItem.quantity < item.quantity) {
+          throw new Error(`Not enough stock for ${item.name}. Only ${inventoryItem.quantity} available.`)
+        }
+
+        // Update inventory with new quantity
+        const newQuantity = inventoryItem.quantity - item.quantity
         const { error: updateError } = await supabase
           .from('inventory_items')
           .update({ quantity: newQuantity })
@@ -192,34 +112,154 @@ const handleSubmit = async (e) => {
         if (updateError) throw updateError
       }
 
-      // Then create the sale record
-      const { data, error } = await supabase
+      // Create the sale record with correct date fields
+      const { error: saleError } = await supabase
         .from('sales')
         .insert([{
-          service_type: newSale.service_type,
-          items_sold: newSale.items_sold,
-          payment_type: newSale.payment_type,
-          total_amount: newSale.total_amount
+          ...saleData,
+          created_at: new Date().toISOString(),
+          week_start_date: weekStart,
+          month_date: monthDate
         }])
-        .select()
 
-      if (error) throw error
+      if (saleError) throw saleError
 
-      // Reset form and refresh data
-      setNewSale({
-        service_type: '',
-        items_sold: [],
-        payment_type: '',
-        total_amount: 0,
-        selectedItem: '',
-        selectedQuantity: 1
-      })
-      
-      await fetchSales() // Refresh sales list
-      await fetchInventoryItems() // Refresh inventory
-    } catch (err) {
-      setError('Error creating sale: ' + err.message)
+      // Update summaries
+      await updateSummary('daily_sales_summary', 'date', today, saleData)
+      await updateSummary('weekly_sales_summary', 'week_start_date', weekStart, saleData)
+      await updateSummary('monthly_sales_summary', 'month_date', monthDate, saleData)
+
+      // Refresh data
+      await fetchSales()
+      await fetchInventoryItems()
+
+      // Close modal and show success
+      setIsModalOpen(false)
+      alert('Sale completed successfully!')
+
+    } catch (error) {
+      setError('Error completing sale: ' + error.message)
+    } finally {
+      // Reset submitting state when done
+      setIsSubmitting(false)
     }
+  }
+
+  async function updateSummary(table, dateField, dateValue, saleData) {
+    let summaryData = {
+      [dateField]: dateValue,
+      total_sales: 0,
+      total_transactions: 0,
+      popular_items: []
+    }
+
+    // Handle weekly summary specifics
+    if (table === 'weekly_sales_summary') {
+      const weekEndDate = getWeekEndDate(dateValue)
+      summaryData = {
+        ...summaryData,
+        week_start_date: dateValue,
+        week_end_date: weekEndDate,
+        week_number: getWeekNumber(dateValue)
+      }
+    } else if (table === 'monthly_sales_summary') {
+      summaryData = {
+        ...summaryData,
+        month_date: dateValue,
+        end_date: getMonthEndDate(dateValue),
+        month_name: new Date(dateValue).toLocaleString('default', { month: 'long' })
+      }
+    }
+
+    // Get existing summary or create new one
+    const { data, error: fetchError } = await supabase
+      .from(table)
+      .select('*')
+      .eq(dateField, dateValue)
+      .single()
+
+    if (fetchError && fetchError.code !== 'PGRST116') throw fetchError
+
+    const currentSummary = data || summaryData
+
+    const updatedSummary = {
+      ...currentSummary,
+      total_sales: currentSummary.total_sales + saleData.total_amount,
+      total_transactions: currentSummary.total_transactions + 1,
+      popular_items: updatePopularItems(currentSummary.popular_items, saleData.items_sold)
+    }
+
+    const { error: updateError } = await supabase
+      .from(table)
+      .upsert(updatedSummary)
+
+    if (updateError) throw updateError
+  }
+
+  function updatePopularItems(currentPopular = [], newItems) {
+    const itemMap = new Map()
+    
+    currentPopular.forEach(item => {
+      itemMap.set(item.id, item)
+    })
+
+    newItems.forEach(item => {
+      if (itemMap.has(item.id)) {
+        const current = itemMap.get(item.id)
+        itemMap.set(item.id, {
+          ...current,
+          quantity: current.quantity + item.quantity
+        })
+      } else {
+        itemMap.set(item.id, {
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity
+        })
+      }
+    })
+
+    return Array.from(itemMap.values())
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5)
+  }
+
+  function getWeekStart() {
+    const now = new Date()
+    const dayOfWeek = now.getDay()
+    const diff = now.getDate() - dayOfWeek
+    const weekStart = new Date(now.setDate(diff))
+    weekStart.setHours(0, 0, 0, 0)
+    return weekStart.toISOString().split('T')[0]
+  }
+
+  function getWeekEndDate(weekStartDate) {
+    const weekStart = new Date(weekStartDate)
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekStart.getDate() + 6)
+    weekEnd.setHours(23, 59, 59, 999)
+    return weekEnd.toISOString().split('T')[0]
+  }
+
+  function getWeekNumber(dateString) {
+    const date = new Date(dateString)
+    date.setHours(0, 0, 0, 0)
+    date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7)
+    const week1 = new Date(date.getFullYear(), 0, 4)
+    return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7)
+  }
+
+  function getMonthEndDate(monthStart) {
+    const date = new Date(monthStart)
+    const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0)
+    return lastDay.toISOString().split('T')[0]
+  }
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
   }
 
   return (
@@ -228,8 +268,6 @@ const handleSubmit = async (e) => {
       <div className="flex flex-1">
         <Sidebar />
         <main className="flex-1 p-8">
-          <h1 className="text-3xl font-bold mb-6 text-foreground">Sales</h1>
-          
           {error && (
             <div className="bg-red-500 text-white p-3 rounded-lg mb-4">
               {error}
@@ -237,182 +275,67 @@ const handleSubmit = async (e) => {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Sales Form */}
-            <div className="bg-secondary p-6 rounded-lg shadow-lg">
-              <h2 className="text-xl font-semibold mb-4 text-foreground">Record Sale</h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Service Type */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Service Type</label>
-                  <select
-                    value={newSale.service_type}
-                    onChange={(e) => setNewSale({ ...newSale, service_type: e.target.value })}
-                    className="w-full p-2 rounded-md bg-primary text-foreground border border-gray-700"
-                    required
-                  >
-                    <option value="">Select service type</option>
-                    <option value="Printing">Printing</option>
-                    <option value="Copying">Copying</option>
-                    <option value="Stationery Sale">Stationery Sale</option>
-                  </select>
-                </div>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold text-foreground">Sales</h1>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-accent hover:bg-accent/80 text-white font-bold py-2 px-4 rounded"
+            >
+              New Sale
+            </button>
+          </div>
 
-                {/* Item Selection */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-foreground">Add Items</label>
-                  <div className="flex gap-2">
-                    <select
-                      value={newSale.selectedItem}
-                      onChange={(e) => setNewSale({ ...newSale, selectedItem: e.target.value })}
-                      className="flex-1 p-2 rounded-md bg-primary text-foreground border border-gray-700"
-                    >
-                      <option value="">Select item</option>
-                      {inventoryItems.map(item => (
-                        <option key={item.id} value={item.id}>
-                          {item.name} (${item.unit_price})
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="number"
-                      value={newSale.selectedQuantity}
-                      onChange={(e) => setNewSale({ ...newSale, selectedQuantity: e.target.value })}
-                      min="1"
-                      className="w-24 p-2 rounded-md bg-primary text-foreground border border-gray-700"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddItem}
-                      className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/80"
-                    >
-                      Add
-                    </button>
-                  </div>
-                </div>
+          {/* Sales Summary with key prop for forcing refresh */}
+          <div className="mb-8">
+            <SalesSummary key={sales.length} />
+          </div>
 
-                {/* Selected Items List */}
-                {newSale.items_sold.length > 0 && (
-                  <div className="border border-gray-700 rounded-md overflow-hidden mt-4">
-                    <table className="min-w-full divide-y divide-gray-700">
-                      <thead className="bg-primary">
-                        <tr>
-                          <th className="px-4 py-2 text-left text-sm text-foreground">Item</th>
-                          <th className="px-4 py-2 text-left text-sm text-foreground">Qty</th>
-                          <th className="px-4 py-2 text-left text-sm text-foreground">Price</th>
-                          <th className="px-4 py-2 text-left text-sm text-foreground">Subtotal</th>
-                          <th className="px-4 py-2"></th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-700">
-                        {newSale.items_sold.map((item, index) => (
-                          <tr key={index}>
-                            <td className="px-4 py-2 text-sm text-foreground">{item.name}</td>
-                            <td className="px-4 py-2 text-sm text-foreground">{item.quantity}</td>
-                            <td className="px-4 py-2 text-sm text-foreground">${item.unit_price}</td>
-                            <td className="px-4 py-2 text-sm text-foreground">${item.subtotal}</td>
-                            <td className="px-4 py-2 text-sm">
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveItem(index)}
-                                className="text-red-500 hover:text-red-400"
-                              >
-                                Remove
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {/* Payment Type */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Payment Type</label>
-                  <select
-                    value={newSale.payment_type}
-                    onChange={(e) => setNewSale({ ...newSale, payment_type: e.target.value })}
-                    className="w-full p-2 rounded-md bg-primary text-foreground border border-gray-700"
-                    required
-                  >
-                    <option value="">Select payment type</option>
-                    <option value="Cash">Cash</option>
-                    <option value="Card">Card</option>
-                  </select>
-                </div>
-
-                {/* Total Amount (Read-only) */}
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">Total Amount</label>
-                  <input
-                    type="text"
-                    value={`$${newSale.total_amount}`}
-                    readOnly
-                    className="w-full p-2 rounded-md bg-gray-700 text-foreground border border-gray-600"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={newSale.items_sold.length === 0}
-                  className="w-full py-2 px-4 rounded-md bg-accent hover:bg-accent/80 text-white font-medium transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Complete Sale
-                </button>
-              </form>
+          {/* Recent Sales List */}
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
             </div>
-
-            {/* Recent Sales List */}
-            <div className="bg-secondary p-6 rounded-lg shadow-lg">
-              <h2 className="text-xl font-semibold mb-4 text-foreground">Recent Sales</h2>
-              {loading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {sales.map((sale) => (
-                    <div key={sale.id} className="bg-primary p-4 rounded-lg">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-400">Service</p>
-                          <p className="mt-1 text-sm text-foreground">{sale.service_type}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-400">Date</p>
-                          <p className="mt-1 text-sm text-foreground">
-                            {new Date(sale.created_at).toLocaleString()}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-400">Payment</p>
-                          <p className="mt-1 text-sm text-foreground">{sale.payment_type}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-400">Total</p>
-                          <p className="mt-1 text-sm text-foreground">${sale.total_amount}</p>
-                        </div>
-                      </div>
-                      <div className="mt-3">
-                        <p className="text-sm font-medium text-gray-400">Items</p>
-                        <div className="mt-1 space-y-1">
+          ) : (
+            <div className="bg-secondary rounded-lg shadow-lg p-6">
+              <h2 className="text-xl font-semibold mb-4">Recent Sales</h2>
+              <div className="space-y-4">
+                {sales.map((sale) => (
+                  <div key={sale.id} className="bg-primary p-4 rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{sale.service_type}</h3>
+                        <p className="text-sm text-gray-400">
+                          {new Date(sale.created_at).toLocaleString()}
+                        </p>
+                        <div className="mt-2">
                           {sale.items_sold.map((item, index) => (
-                            <p key={index} className="text-sm text-foreground">
+                            <p key={index} className="text-sm text-gray-300">
                               {item.name} × {item.quantity}
                             </p>
                           ))}
                         </div>
                       </div>
+                      <p className="text-lg font-medium">
+                        {formatCurrency(sale.total_amount)}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </main>
       </div>
       <Footer />
+
+      {isModalOpen && (
+        <AddSaleModal
+          closeModal={() => setIsModalOpen(false)}
+          onSubmit={handleCompleteSale}
+          inventoryItems={inventoryItems}
+          isSubmitting={isSubmitting}
+        />
+      )}
     </div>
   )
 }

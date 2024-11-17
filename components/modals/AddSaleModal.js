@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import LoadingSpinner from '../common/LoadingSpinner'
 
-export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, inventoryItems }) {
+export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, inventoryItems, isSubmitting }) {
   const [formData, setFormData] = useState({
     service_type: '',
     items_sold: [],
@@ -91,7 +92,7 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-secondary rounded-lg p-6 w-full max-w-2xl relative">
+      <div className="bg-secondary rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto relative">
         <button
           onClick={closeModal}
           className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -231,17 +232,36 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
             <button
               type="button"
               onClick={closeModal}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+              disabled={isSubmitting}
+              className={`px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 
+                ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/80"
+              disabled={isSubmitting}
+              className={`px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/80 
+                flex items-center space-x-2
+                ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              {editingSale ? 'Update' : 'Complete'} Sale
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <span>{editingSale ? 'Update' : 'Complete'} Sale</span>
+              )}
             </button>
           </div>
+
+          {/* Loading Overlay */}
+          {isSubmitting && (
+            <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center rounded-lg">
+              <LoadingSpinner />
+            </div>
+          )}
         </form>
       </div>
     </div>
