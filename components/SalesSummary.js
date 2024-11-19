@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient'
 
 export default function SalesSummary() {
@@ -10,32 +10,7 @@ export default function SalesSummary() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchSummaries()
-
-    // Set up real-time subscription for summary updates
-    const summaryChannel = supabase
-      .channel('summary-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'sales'
-        },
-        () => {
-          fetchSummaries()
-        }
-      )
-      .subscribe()
-
-    // Cleanup subscription
-    return () => {
-      supabase.removeChannel(summaryChannel)
-    }
-  }, [])
-
-  async function fetchSummaries() {
+  const fetchSummaries = useCallback(async () => {
     try {
       setLoading(true)
       const today = new Date().toISOString().split('T')[0]
@@ -79,7 +54,32 @@ export default function SalesSummary() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchSummaries()
+
+    // Set up real-time subscription for summary updates
+    const summaryChannel = supabase
+      .channel('summary-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'sales'
+        },
+        () => {
+          fetchSummaries()
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscription
+    return () => {
+      supabase.removeChannel(summaryChannel)
+    }
+  }, [fetchSummaries])
 
   function getWeekStart() {
     const now = new Date()
@@ -105,7 +105,7 @@ export default function SalesSummary() {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Daily Summary */}
       <div className="bg-secondary p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-2">Today's Sales</h3>
+        <h3 className="text-lg font-semibold mb-2">Today&apos;s Sales</h3>
         <div className="space-y-2">
           <p className="text-2xl font-bold text-accent">
             {formatCurrency(summaries.daily.total_sales)}
@@ -118,7 +118,7 @@ export default function SalesSummary() {
 
       {/* Weekly Summary */}
       <div className="bg-secondary p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-2">This Week's Sales</h3>
+        <h3 className="text-lg font-semibold mb-2">This Week&apos;s Sales</h3>
         <div className="space-y-2">
           <p className="text-2xl font-bold text-accent">
             {formatCurrency(summaries.weekly.total_sales)}
@@ -131,7 +131,7 @@ export default function SalesSummary() {
 
       {/* Monthly Summary */}
       <div className="bg-secondary p-6 rounded-lg shadow-lg">
-        <h3 className="text-lg font-semibold mb-2">This Month's Sales</h3>
+        <h3 className="text-lg font-semibold mb-2">This Month&apos;s Sales</h3>
         <div className="space-y-2">
           <p className="text-2xl font-bold text-accent">
             {formatCurrency(summaries.monthly.total_sales)}
