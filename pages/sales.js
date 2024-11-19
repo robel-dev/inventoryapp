@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { getSupabaseClient } from '../lib/supabaseClient'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import Footer from '../components/Footer'
@@ -15,6 +15,13 @@ export default function Sales() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      setError('Unable to connect to database')
+      setLoading(false)
+      return
+    }
+
     fetchSales()
     fetchInventoryItems()
 
@@ -46,6 +53,9 @@ export default function Sales() {
   }, [])
 
   async function fetchSales() {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -63,6 +73,9 @@ export default function Sales() {
   }
 
   async function fetchInventoryItems() {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     try {
       const { data, error } = await supabase
         .from('inventory_items')
@@ -77,8 +90,13 @@ export default function Sales() {
   }
 
   async function handleCompleteSale(saleData) {
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      setError('Unable to connect to database')
+      return
+    }
+
     try {
-      // Set submitting state to true at the start
       setIsSubmitting(true)
       
       // Get current dates
@@ -112,7 +130,7 @@ export default function Sales() {
         if (updateError) throw updateError
       }
 
-      // Create the sale record with correct date fields
+      // Create the sale record
       const { error: saleError } = await supabase
         .from('sales')
         .insert([{
@@ -133,19 +151,20 @@ export default function Sales() {
       await fetchSales()
       await fetchInventoryItems()
 
-      // Close modal and show success
       setIsModalOpen(false)
       alert('Sale completed successfully!')
 
     } catch (error) {
       setError('Error completing sale: ' + error.message)
     } finally {
-      // Reset submitting state when done
       setIsSubmitting(false)
     }
   }
 
   async function updateSummary(table, dateField, dateValue, saleData) {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     let summaryData = {
       [dateField]: dateValue,
       total_sales: 0,

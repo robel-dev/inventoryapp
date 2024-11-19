@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { getSupabaseClient } from '../lib/supabaseClient'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import Footer from '../components/Footer'
@@ -13,8 +13,10 @@ export default function Expenses() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      setError('Missing Supabase configuration')
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      setError('Unable to connect to database')
+      setLoading(false)
       return
     }
 
@@ -39,6 +41,9 @@ export default function Expenses() {
   }, [])
 
   async function fetchExpenses() {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     try {
       setLoading(true)
       const { data, error: fetchError } = await supabase
@@ -56,6 +61,9 @@ export default function Expenses() {
   }
 
   const handleAddExpense = async (expenseData) => {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     try {
       const { data, error } = await supabase
         .from('expenses')
@@ -72,6 +80,9 @@ export default function Expenses() {
   }
 
   const handleUpdateExpense = async (expenseData) => {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     try {
       const { error } = await supabase
         .from('expenses')
@@ -89,6 +100,9 @@ export default function Expenses() {
   }
 
   const handleDeleteExpense = async (id) => {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     if (!confirm('Are you sure you want to delete this expense?')) return
 
     try {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { getSupabaseClient } from '../lib/supabaseClient'
 import { handleSupabaseError, formatCurrency } from '../lib/utils'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
@@ -13,8 +13,14 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Fetch inventory on component mount
   useEffect(() => {
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      setError('Unable to connect to database')
+      setLoading(false)
+      return
+    }
+
     fetchInventory()
 
     // Set up real-time subscription
@@ -32,6 +38,9 @@ export default function Inventory() {
   }, [])
 
   async function fetchInventory() {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -40,7 +49,6 @@ export default function Inventory() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
-
       setInventoryItems(data)
     } catch (error) {
       setError(handleSupabaseError(error))
@@ -50,6 +58,9 @@ export default function Inventory() {
   }
 
   async function handleAddItem(itemData) {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     try {
       const { data, error } = await supabase
         .from('inventory_items')
@@ -72,6 +83,9 @@ export default function Inventory() {
   }
 
   async function handleUpdateItem(itemData) {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     try {
       const { data, error } = await supabase
         .from('inventory_items')
@@ -99,6 +113,9 @@ export default function Inventory() {
   }
 
   async function handleDeleteItem(id) {
+    const supabase = getSupabaseClient()
+    if (!supabase) return
+
     try {
       const { error } = await supabase
         .from('inventory_items')

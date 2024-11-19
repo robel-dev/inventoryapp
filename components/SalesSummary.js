@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { getSupabaseClient } from '../lib/supabaseClient'
 
 export default function SalesSummary() {
   const [summaries, setSummaries] = useState({
@@ -11,6 +11,13 @@ export default function SalesSummary() {
   const [error, setError] = useState(null)
 
   const fetchSummaries = useCallback(async () => {
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      setError('Unable to connect to database')
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       const today = new Date().toISOString().split('T')[0]
@@ -57,6 +64,13 @@ export default function SalesSummary() {
   }, [])
 
   useEffect(() => {
+    const supabase = getSupabaseClient()
+    if (!supabase) {
+      setError('Unable to connect to database')
+      setLoading(false)
+      return
+    }
+
     fetchSummaries()
 
     // Set up real-time subscription for summary updates
@@ -77,7 +91,9 @@ export default function SalesSummary() {
 
     // Cleanup subscription
     return () => {
-      supabase.removeChannel(summaryChannel)
+      if (supabase) {
+        supabase.removeChannel(summaryChannel)
+      }
     }
   }, [fetchSummaries])
 
