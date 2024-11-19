@@ -6,47 +6,48 @@ import Footer from '../components/Footer'
 import AddEditExpenseModal from '../components/modals/AddEditExpenseModal'
 
 export default function Expenses() {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL || 
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    console.error('Supabase environment variables are missing from expenses')
-    return <div>Error: Configuration missing</div>
-  }
-
+  const [expenses, setExpenses] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
-  const [expenses, setExpenses] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      setError('Missing Supabase configuration')
+      return
+    }
+
     fetchExpenses()
 
-    // Set up real-time subscription
-    const subscription = supabase
-      .channel('expenses_changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'expenses' },
+    const expensesChannel = supabase
+      .channel('expenses-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'expenses'
+        },
         () => fetchExpenses()
       )
       .subscribe()
 
     return () => {
-      subscription.unsubscribe()
+      supabase.removeChannel(expensesChannel)
     }
   }, [])
 
   async function fetchExpenses() {
     try {
       setLoading(true)
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('expenses')
         .select('*')
-        .order('date', { ascending: false })
+        .order('created_at', { ascending: false })
 
-      if (error) throw error
-      setExpenses(data)
+      if (fetchError) throw fetchError
+      setExpenses(data || [])
     } catch (err) {
       setError('Error fetching expenses: ' + err.message)
     } finally {
