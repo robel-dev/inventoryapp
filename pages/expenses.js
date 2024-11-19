@@ -6,6 +6,14 @@ import Footer from '../components/Footer'
 import AddEditExpenseModal from '../components/modals/AddEditExpenseModal'
 
 export default function Expenses() {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL || 
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    console.error('Supabase environment variables are missing from expenses')
+    return <div>Error: Configuration missing</div>
+  }
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
   const [expenses, setExpenses] = useState([])
