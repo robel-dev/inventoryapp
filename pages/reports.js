@@ -2,7 +2,11 @@ import { useState, useEffect } from 'react'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
 import Footer from '../components/Footer'
+<<<<<<< HEAD
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2'
+=======
+import { Line, Bar } from 'react-chartjs-2'
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,16 +14,22 @@ import {
   PointElement,
   LineElement,
   BarElement,
+<<<<<<< HEAD
   ArcElement,
+=======
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
   Title,
   Tooltip,
   Legend,
 } from 'chart.js'
+<<<<<<< HEAD
 import { Chart } from 'react-chartjs-2'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+=======
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
 
 ChartJS.register(
   CategoryScale,
@@ -27,7 +37,10 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
+<<<<<<< HEAD
   ArcElement,
+=======
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
   Title,
   Tooltip,
   Legend
@@ -62,6 +75,7 @@ export default function Reports() {
 
   const [totalProfit, setTotalProfit] = useState(0)
 
+<<<<<<< HEAD
   const [salesDistributionData, setSalesDistributionData] = useState({
     labels: ['Printing', 'Copying', 'Stationery Sale'],
     datasets: [
@@ -164,11 +178,14 @@ export default function Reports() {
     setAverageTransaction(average)
   }, [sales])
 
+=======
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
   useEffect(() => {
     const profit = profitLossData.datasets[0].data.reduce((acc, curr) => acc + curr, 0)
     setTotalProfit(profit)
   }, [profitLossData])
 
+<<<<<<< HEAD
   useEffect(() => {
     // Assuming you have access to Cost of Goods Sold (COGS) and Average Inventory
     const cogs = sales.reduce((acc, sale) => 
@@ -192,6 +209,8 @@ export default function Reports() {
     setInventoryTurnover(turnover)
   }, [sales, inventoryItems])
 
+=======
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
   const chartOptions = {
     responsive: true,
     plugins: {
@@ -221,6 +240,7 @@ export default function Reports() {
     }
   }
 
+<<<<<<< HEAD
   const exportToPDF = () => {
     const doc = new jsPDF()
     doc.text("Sales Distribution Report", 14, 16)
@@ -277,6 +297,8 @@ export default function Reports() {
     return saleDate >= startDate && saleDate <= endDate
   })
 
+=======
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Navbar />
@@ -293,6 +315,7 @@ export default function Reports() {
               <h2 className="text-xl font-semibold mb-4 text-foreground">Revenue Trends</h2>
               <Line data={revenueTrendData} options={chartOptions} />
             </div>
+<<<<<<< HEAD
             <div className="bg-secondary p-6 rounded-lg shadow-lg">
               <h2 className="text-xl font-semibold mb-4 text-foreground">Sales Distribution by Service Type</h2>
               <Pie data={salesDistributionData} options={chartOptions} />
@@ -323,6 +346,8 @@ export default function Reports() {
               <h2 className="text-xl font-semibold mb-4 text-foreground">Daily Sales Performance</h2>
               <Line data={dailySalesData} options={chartOptions} />
             </div>
+=======
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
           </div>
           <div className="mt-8 bg-secondary p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4 text-foreground">Total Profit/Loss</h2>
@@ -333,6 +358,7 @@ export default function Reports() {
               </span>
             </p>
           </div>
+<<<<<<< HEAD
           <div className="mt-8 bg-secondary p-6 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold mb-4 text-foreground">Average Transaction Value</h2>
             <p className="text-3xl font-bold text-center text-foreground">
@@ -359,6 +385,8 @@ export default function Reports() {
               <DatePicker selected={endDate} onChange={(date) => setEndDate(date)} className="p-2 rounded-md bg-primary text-foreground border border-gray-700" />
             </div>
           </div>
+=======
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
         </main>
       </div>
       <Footer />

@@ -110,4 +110,8 @@ If you have any questions or need help with setup, please open an issue in the G
 - Next.js team for the amazing framework
 - Supabase team for the backend infrastructure
 - Vercel for hosting and deployment
+<<<<<<< HEAD
 - All contributors who have helped shape this project
+=======
+- All contributors who have helped shape this project
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d

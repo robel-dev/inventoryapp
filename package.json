@@ -12,6 +12,7 @@
     "@heroicons/react": "^2.1.5",
     "@supabase/supabase-js": "^2.46.1",
     "chart.js": "^4.4.6",
+<<<<<<< HEAD
     "datepicker": "^0.0.0",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
@@ -19,6 +20,11 @@
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",
     "react-datepicker": "^7.5.0",
+=======
+    "next": "15.0.3",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
+>>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
