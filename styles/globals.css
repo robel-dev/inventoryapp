@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Set dark theme as default */
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --nav-bg: #111827;
+  --sidebar-bg: #111827;
+  --hover: #374151;
+}
+
+/* Base styles */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  min-height: 100vh;
+}
+
+/* Ensure dark mode is applied */
+html {
+  background-color: var(--background);
+  color-scheme: dark;
+}
+
+/* Remove light mode media query to keep dark mode as default */
