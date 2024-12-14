@@ -150,18 +150,10 @@ export default function AddEditItemModal({ closeModal, onSubmit, editingItem }) 
               } focus:border-accent focus:ring-1 focus:ring-accent`}
             >
               <option value="">Select a category</option>
-<<<<<<< HEAD
               <option value="Stationery">Stationery</option>
               <option value="Birthday Items">Birthday Items</option>
               <option value="Candy and Sweets">Candy and Sweets</option>
               <option value="Jewelry Items">Jewelry Items</option>
-=======
-              <option value="Printing Supplies">Printing Supplies</option>
-              <option value="Stationery">Stationery</option>
-              <option value="Office Supplies">Office Supplies</option>
-              <option value="Paper Products">Paper Products</option>
-              <option value="Ink & Toner">Ink & Toner</option>
->>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
             </select>
             {errors.category && (
               <p className="mt-1 text-sm text-red-500">{errors.category}</p>

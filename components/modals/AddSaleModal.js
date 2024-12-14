@@ -8,14 +8,10 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
     payment_type: '',
     total_amount: '0',
     selectedItem: '',
-<<<<<<< HEAD
     selectedQuantity: '1',
     printType: '',
     numberOfPages: '1',
     customPrice: ''
-=======
-    selectedQuantity: '1'
->>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
   })
 
   const [errors, setErrors] = useState({})
@@ -28,14 +24,10 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
         payment_type: editingSale.payment_type,
         total_amount: editingSale.total_amount.toString(),
         selectedItem: '',
-<<<<<<< HEAD
         selectedQuantity: '1',
         printType: editingSale.printType || '',
         numberOfPages: editingSale.numberOfPages?.toString() || '1',
         customPrice: editingSale.customPrice?.toString() || ''
-=======
-        selectedQuantity: '1'
->>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
       })
     }
   }, [editingSale])
@@ -45,7 +37,6 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
     if (!formData.service_type) {
       newErrors.service_type = 'Service type is required'
     }
-<<<<<<< HEAD
     if (formData.service_type === 'Printing' && !formData.printType) {
       newErrors.printType = 'Print type is required'
     }
@@ -61,18 +52,11 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
       newErrors.items_sold = 'At least one item must be added'
     }
     if (formData.service_type === 'Stationery Sale' && !formData.payment_type) {
-=======
-    if (formData.items_sold.length === 0) {
-      newErrors.items_sold = 'At least one item must be added'
-    }
-    if (!formData.payment_type) {
->>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
       newErrors.payment_type = 'Payment type is required'
     }
     return newErrors
   }
 
-<<<<<<< HEAD
   const calculateProfit = () => {
     const pages = parseInt(formData.numberOfPages)
     let profitPerPage = 0
@@ -91,8 +75,6 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
     return (profitPerPage * pages).toFixed(2)
   }
 
-=======
->>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
   const handleAddItem = () => {
     if (!formData.selectedItem || !formData.selectedQuantity) return
 
@@ -136,11 +118,7 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
         service_type: formData.service_type,
         items_sold: formData.items_sold,
         payment_type: formData.payment_type,
-<<<<<<< HEAD
         total_amount: parseFloat(calculateProfit())
-=======
-        total_amount: parseFloat(formData.total_amount)
->>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
       })
     } else {
       setErrors(validationErrors)
@@ -184,7 +162,6 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
             )}
           </div>
 
-<<<<<<< HEAD
           {/* Conditional Fields for Printing */}
           {formData.service_type === 'Printing' && (
             <>
@@ -338,94 +315,6 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
               )}
             </div>
           )}
-=======
-          {/* Add Items Section */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">Add Items</label>
-            <div className="flex gap-2">
-              <select
-                value={formData.selectedItem}
-                onChange={(e) => setFormData({ ...formData, selectedItem: e.target.value })}
-                className="flex-1 p-2 rounded-md bg-primary text-foreground border border-gray-700"
-              >
-                <option value="">Select item</option>
-                {inventoryItems.map(item => (
-                  <option key={item.id} value={item.id}>
-                    {item.name} (${item.unit_price})
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                value={formData.selectedQuantity}
-                onChange={(e) => setFormData({ ...formData, selectedQuantity: e.target.value })}
-                min="1"
-                className="w-24 p-2 rounded-md bg-primary text-foreground border border-gray-700"
-              />
-              <button
-                type="button"
-                onClick={handleAddItem}
-                className="px-4 py-2 bg-accent text-white rounded-md hover:bg-accent/80"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-
-          {/* Items List */}
-          <div className="border border-gray-700 rounded-md overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-700">
-              <thead className="bg-primary">
-                <tr>
-                  <th className="px-4 py-2 text-left text-sm text-foreground">Item</th>
-                  <th className="px-4 py-2 text-left text-sm text-foreground">Quantity</th>
-                  <th className="px-4 py-2 text-left text-sm text-foreground">Price</th>
-                  <th className="px-4 py-2 text-left text-sm text-foreground">Subtotal</th>
-                  <th className="px-4 py-2 text-sm text-foreground">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700">
-                {formData.items_sold.map((item, index) => (
-                  <tr key={index}>
-                    <td className="px-4 py-2 text-sm text-foreground">{item.name}</td>
-                    <td className="px-4 py-2 text-sm text-foreground">{item.quantity}</td>
-                    <td className="px-4 py-2 text-sm text-foreground">${item.unit_price}</td>
-                    <td className="px-4 py-2 text-sm text-foreground">${item.subtotal}</td>
-                    <td className="px-4 py-2 text-sm">
-                      <button
-                        type="button"
-                        onClick={() => removeItem(index)}
-                        className="text-red-500 hover:text-red-400"
-                      >
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Payment Type */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              Payment Type
-            </label>
-            <select
-              value={formData.payment_type}
-              onChange={(e) => setFormData({ ...formData, payment_type: e.target.value })}
-              className="w-full p-2 rounded-md bg-primary text-foreground border border-gray-700"
-            >
-              <option value="">Select payment type</option>
-              <option value="Cash">Cash</option>
-              <option value="Card">Card</option>
-              <option value="Bank Transfer">Bank Transfer</option>
-            </select>
-            {errors.payment_type && (
-              <p className="mt-1 text-sm text-red-500">{errors.payment_type}</p>
-            )}
-          </div>
->>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
 
           {/* Total Amount */}
           <div>
@@ -434,11 +323,7 @@ export default function AddEditSaleModal({ closeModal, onSubmit, editingSale, in
             </label>
             <input
               type="text"
-<<<<<<< HEAD
               value={`$${calculateProfit()}`}
-=======
-              value={`$${formData.total_amount}`}
->>>>>>> 19a42a9b4836835dd5a026ca06a887d8bf8cca8d
               readOnly
               className="w-full p-2 rounded-md bg-gray-700 text-foreground border border-gray-600"
             />
