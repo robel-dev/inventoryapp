@@ -69,7 +69,8 @@ export default function Inventory() {
           quantity: parseInt(itemData.quantity),
           category: itemData.category,
           unit_price: parseFloat(itemData.unit_price),
-          reorder_level: parseInt(itemData.reorder_level || 10)
+          reorder_level: parseInt(itemData.reorder_level || 10),
+          remarks: itemData.remarks
         }])
         .select()
 
@@ -95,6 +96,7 @@ export default function Inventory() {
           category: itemData.category,
           unit_price: parseFloat(itemData.unit_price),
           reorder_level: parseInt(itemData.reorder_level || 10),
+          remarks: itemData.remarks,
           updated_at: new Date()
         })
         .eq('id', editingItem.id)
@@ -165,6 +167,7 @@ export default function Inventory() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Quantity</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Category</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Unit Price</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Remarks</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-foreground uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
@@ -175,6 +178,7 @@ export default function Inventory() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{item.quantity}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{item.category}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{formatCurrency(item.unit_price)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{item.remarks}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => {

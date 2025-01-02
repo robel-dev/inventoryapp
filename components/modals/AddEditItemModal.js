@@ -6,7 +6,8 @@ export default function AddEditItemModal({ closeModal, onSubmit, editingItem }) 
     quantity: '',
     category: '',
     unit_price: '',
-    reorder_level: ''
+    reorder_level: '',
+    remarks: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -18,7 +19,8 @@ export default function AddEditItemModal({ closeModal, onSubmit, editingItem }) 
         quantity: editingItem.quantity.toString(),
         category: editingItem.category,
         unit_price: editingItem.unit_price.toString(),
-        reorder_level: editingItem.reorder_level?.toString() || '10'
+        reorder_level: editingItem.reorder_level?.toString() || '10',
+        remarks: editingItem.remarks || ''
       })
     }
   }, [editingItem])
@@ -198,6 +200,21 @@ export default function AddEditItemModal({ closeModal, onSubmit, editingItem }) 
               min="0"
               className="w-full p-2 rounded-md bg-primary text-foreground border border-gray-700 focus:border-accent focus:ring-1 focus:ring-accent"
               placeholder="Enter reorder level"
+            />
+          </div>
+
+          {/* Remarks Field */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1">
+              Remarks
+            </label>
+            <textarea
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleInputChange}
+              className="w-full p-2 rounded-md bg-primary text-foreground border border-gray-700 focus:border-accent focus:ring-1 focus:ring-accent"
+              placeholder="Enter any additional comments"
+              rows="3"
             />
           </div>
 
